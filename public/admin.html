@@ -8,23 +8,25 @@
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body class="bg-background min-h-screen flex flex-col">
-  <header class="bg-primary text-on-primary h-16 z-20">
-    <div class="max-w-[1440px] mx-auto h-full px-8 flex items-center justify-between">
-      <div class="flex items-center gap-8">
-        <strong id="instansi-title">SISTEM LOKET ANTRIAN</strong>
-        <nav class="hidden md:flex gap-6 text-sm font-semibold">
-          <a href="#dashboard" class="nav-link border-b-2 border-secondary-container pb-1">DASHBOARD</a>
-          <a href="/loket.html" class="opacity-70 hover:text-secondary-container">LOKET</a>
-          <a href="riwayat.html" class="nav-link opacity-70 hover:text-secondary-container">RIWAYAT</a>
-          <a href="/display.html" target="_blank" class="opacity-70 hover:text-secondary-container">DISPLAY</a>
-        </nav>
+  <header class="bg-primary-container text-on-primary shrink-0 z-20">
+    <div class="loket-header-inner max-w-[1440px] mx-auto min-h-16 px-4 md:px-6 py-2 flex items-center justify-between gap-3 flex-wrap">
+      <div class="hdr-left flex items-center gap-2 min-w-0">
+        <img id="instansi-logo" class="h-8 w-8 object-contain rounded hidden shrink-0" alt="Logo instansi" />
+        <div class="min-w-0">
+          <h1 id="instansi-title" class="font-bold uppercase tracking-tight text-sm md:text-base truncate">SISTEM LOKET ANTRIAN</h1>
+        </div>
       </div>
-      <div class="flex items-center gap-4 text-sm">
-        <span id="role-label" class="opacity-80">ADMIN</span>
-        <span id="instansi-logo-wrap">
-          <img id="instansi-logo" class="h-8 hidden" alt="Logo instansi" />
-          <span id="instansi-logo-fallback" class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-lg font-semibold">GO DIGITAL</span>
-        </span>
+      <nav class="hidden md:flex gap-4 text-xs md:text-sm font-semibold shrink-0">
+        <a href="#dashboard" class="nav-link border-b-2 border-secondary-container pb-0.5">DASHBOARD</a>
+        <a href="/loket.html" class="opacity-70 hover:text-secondary-container">LOKET</a>
+        <a href="/riwayat.html" class="opacity-70 hover:text-secondary-container">RIWAYAT</a>
+        <a href="/display.html" target="_blank" class="opacity-70 hover:text-secondary-container">DISPLAY</a>
+      </nav>
+      <div class="hdr-right flex items-center gap-2 md:gap-3">
+        <span id="role-label" class="bg-primary px-3 py-1 rounded-full font-bold text-secondary-container text-sm">ADMIN</span>
+        <span class="hidden sm:flex items-center gap-2 text-xs font-tech uppercase"><span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span>Connected</span>
+        <span id="live-clock" class="font-tech text-sm"></span>
+        <button onclick="logout()" class="text-sm opacity-80">Keluar</button>
       </div>
     </div>
   </header>

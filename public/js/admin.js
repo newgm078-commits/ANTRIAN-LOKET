@@ -341,6 +341,7 @@ async function loadPrefixSettings() {
   if (!user) return;
   document.getElementById("welcome-name").textContent = user.displayName;
   document.getElementById("welcome-role").textContent = user.role;
+  startClock("live-clock");
   document.getElementById("role-label").textContent = user.role === "admin" ? "ADMIN" : `LOKET ${user.loketNumber}`;
   document.getElementById("operator-id").textContent = `ID: ${user.username}`;
 
