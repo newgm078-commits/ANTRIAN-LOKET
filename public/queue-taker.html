@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ambil Nomor · Sistem Loket Antrian</title>
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="min-h-screen bg-background">
+  <header class="bg-primary-container text-on-primary">
+    <div class="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img id="instansi-logo" class="h-10 w-10 object-contain rounded hidden" alt="Logo instansi" />
+        <div>
+          <h1 id="instansi-title" class="font-bold text-xl tracking-tight">SISTEM LOKET ANTRIAN</h1>
+          <p class="font-tech text-[11px] tracking-[0.2em] text-secondary-container">AMBIL NOMOR</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="live-clock" class="font-tech"></span>
+        <button onclick="logout()" class="text-sm opacity-80 hover:opacity-100">Keluar</button>
+      </div>
+    </div>
+  </header>
+  <main class="max-w-[1100px] mx-auto p-6 md:p-10">
+    <div class="flex items-end justify-between mb-8 gap-4 flex-wrap">
+      <div>
+        <h2 class="text-4xl font-extrabold text-primary">Pilih Layanan</h2>
+        <p class="text-on-surface-variant mt-2">Sentuh kartu untuk mengambil nomor antrian.</p>
+      </div>
+      <label class="flex items-center gap-3 bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 sleek-shadow">
+        <input id="priority" type="checkbox" class="w-5 h-5 accent-[#00A4E4]" />
+        <span>
+          <span class="block font-semibold">Jalur Prioritas</span>
+          <span class="text-sm text-on-surface-variant">Lansia, disabilitas, ibu hamil</span>
+        </span>
+      </label>
+    </div>
+    <div id="lanes" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+  </main>
+  <div id="ticket-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-8 max-w-sm w-full text-center sleek-shadow">
+      <p class="font-tech text-xs tracking-widest text-secondary">TIKET ANTRIAN</p>
+      <h3 id="ticket-code" class="text-6xl font-extrabold text-primary my-4">A001</h3>
+      <p id="ticket-meta" class="text-on-surface-variant mb-6"></p>
+      <div class="flex gap-3">
+        <button onclick="window.print()" class="flex-1 bg-[#00A4E4] text-white py-3 rounded-lg font-semibold">Cetak</button>
+        <button onclick="document.getElementById('ticket-modal').classList.add('hidden')" class="flex-1 border border-outline-variant rounded-lg font-semibold">Tutup</button>
+      </div>
+    </div>
+  </div>
+  <div id="print-ticket" class="hidden print:block p-6 text-center">
+    <img id="print-logo" class="h-12 mx-auto mb-2 hidden" alt="Logo instansi" />
+    <p id="print-instansi">SISTEM LOKET ANTRIAN</p>
+    <h1 id="print-code" class="text-5xl font-bold my-4"></h1>
+    <p id="print-meta"></p>
+    <p id="print-footer" class="mt-4 text-sm"></p>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/queue-taker.js"></script>
+</body>
+</html>

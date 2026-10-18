@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard · Sistem Loket Antrian</title>
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="bg-background min-h-screen flex flex-col">
+  <header class="bg-primary text-on-primary h-16 z-20">
+    <div class="max-w-[1440px] mx-auto h-full px-8 flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <strong id="instansi-title">SISTEM LOKET ANTRIAN</strong>
+        <nav class="hidden md:flex gap-6 text-sm font-semibold">
+          <a href="#dashboard" class="nav-link border-b-2 border-secondary-container pb-1">DASHBOARD</a>
+          <a href="/loket.html" class="opacity-70 hover:text-secondary-container">LOKET</a>
+          <a href="riwayat.html" class="nav-link opacity-70 hover:text-secondary-container">RIWAYAT</a>
+          <a href="/display.html" target="_blank" class="opacity-70 hover:text-secondary-container">DISPLAY</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <span id="role-label" class="opacity-80">ADMIN</span>
+        <span id="instansi-logo-wrap">
+          <img id="instansi-logo" class="h-8 hidden" alt="Logo instansi" />
+          <span id="instansi-logo-fallback" class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-lg font-semibold">GO DIGITAL</span>
+        </span>
+      </div>
+    </div>
+  </header>
+  <div class="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
+    <aside class="hidden md:flex w-64 bg-white border-r border-outline-variant flex-col py-4">
+      <div class="px-6 mb-6">
+        <h2 class="font-bold text-primary text-lg">Admin Panel</h2>
+        <p id="operator-id" class="font-tech text-xs text-on-surface-variant">Operator</p>
+      </div>
+      <nav class="flex-1 px-2 space-y-1">
+        <a href="#dashboard" class="side-link flex items-center gap-3 rounded-lg px-4 py-3 bg-secondary-container text-on-secondary-container font-semibold"><span class="material-symbols-outlined">dashboard</span> Overview</a>
+        <a href="#list" class="side-link flex items-center gap-3 rounded-lg px-4 py-3 text-on-surface-variant hover:bg-surface-container-high"><span class="material-symbols-outlined">queue</span> Queue Management</a>
+        <a href="#history" class="side-link flex items-center gap-3 rounded-lg px-4 py-3 text-on-surface-variant hover:bg-surface-container-high"><span class="material-symbols-outlined">history</span> History</a>
+        <a href="#settings" id="settings-link" class="side-link flex items-center gap-3 rounded-lg px-4 py-3 text-on-surface-variant hover:bg-surface-container-high"><span class="material-symbols-outlined">settings</span> Settings</a>
+      </nav>
+      <div class="px-4 space-y-2">
+        <button id="emergency-btn" class="w-full flex items-center justify-center gap-2 bg-error text-on-error py-2 rounded-lg font-semibold">Emergency Stop</button>
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant"><span class="material-symbols-outlined">logout</span> Logout</button>
+      </div>
+    </aside>
+    <main class="flex-1 overflow-y-auto p-6 md:p-10">
+      <section id="view-dashboard">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-primary mb-2">Dashboard Admin</h1>
+        <p class="text-on-surface-variant mb-8">Selamat datang, <span id="welcome-name">admin</span> · <span class="font-tech uppercase text-primary" id="welcome-role">ADMIN</span></p>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5 mb-8" id="stats-grid"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="lg:col-span-2 bg-white border border-outline-variant rounded-xl p-8 sleek-shadow flex items-center justify-between">
+            <div>
+              <h2 class="text-3xl font-bold text-primary">Loket Aktif</h2>
+              <p class="text-on-surface-variant">Loket yang sedang melayani.</p>
+            </div>
+            <div class="w-24 h-24 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-4xl font-extrabold" id="active-loket">0</div>
+          </div>
+          <div class="bg-white border border-outline-variant rounded-xl p-6 sleek-shadow">
+            <h3 class="font-bold text-primary mb-4 border-b border-outline-variant pb-2">Menu Admin</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <a href="#list" class="p-4 rounded-lg bg-surface-container text-center"><span class="material-symbols-outlined text-primary">list_alt</span><div class="font-semibold text-sm mt-1">List Antrian</div></a>
+              <a href="#history" class="p-4 rounded-lg bg-surface-container text-center"><span class="material-symbols-outlined text-primary">history</span><div class="font-semibold text-sm mt-1">History</div></a>
+              <a href="/loket.html" class="p-4 rounded-lg bg-surface-container text-center"><span class="material-symbols-outlined text-primary">desk</span><div class="font-semibold text-sm mt-1">Kontrol Loket</div></a>
+              <a href="#settings" class="p-4 rounded-lg bg-surface-container text-center admin-only"><span class="material-symbols-outlined text-primary">settings_suggest</span><div class="font-semibold text-sm mt-1">Pengaturan</div></a>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="view-list" class="hidden">
+        <div class="flex items-center gap-4 mb-6">
+          <a href="#dashboard" class="border border-outline-variant rounded-lg px-4 py-2 bg-white">Kembali</a>
+          <h1 class="text-2xl md:text-4xl font-extrabold min-w-0">List Antrian</h1>
+          <select id="list-filter-prefix" class="ml-auto rounded-lg bg-[#edf2f7] border px-3 py-2 text-sm">
+            <option value="">Semua Jalur</option>
+          </select>
+        </div>
+        <div class="bg-white rounded-xl border border-outline-variant sleek-shadow overflow-hidden">
+          <table class="w-full text-left">
+            <thead class="bg-primary/5 text-on-surface-variant text-sm font-semibold">
+              <tr><th class="py-4 px-6">Nomor</th><th class="py-4 px-6">Prefix</th><th class="py-4 px-6">Status</th><th class="py-4 px-6">Waktu</th></tr>
+            </thead>
+            <tbody id="list-body" class="divide-y divide-outline-variant"></tbody>
+          </table>
+          <div class="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex justify-between text-sm text-on-surface-variant">
+            <span id="list-meta">Showing 0</span>
+            <div class="flex gap-2">
+              <button id="prev-page" class="px-3 py-1 border rounded">Prev</button>
+              <button id="next-page" class="px-3 py-1 border rounded">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="view-history" class="hidden">
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-6">Riwayat Hari Ini</h1>
+        <div class="bg-white rounded-xl border border-outline-variant sleek-shadow overflow-hidden">
+          <table class="w-full text-left">
+            <thead class="bg-primary/5 text-sm font-semibold text-on-surface-variant">
+              <tr><th class="py-4 px-6">Nomor</th><th class="py-4 px-6">Status</th><th class="py-4 px-6">Loket</th><th class="py-4 px-6">Selesai</th></tr>
+            </thead>
+            <tbody id="history-body" class="divide-y divide-outline-variant"></tbody>
+          </table>
+        </div>
+      </section>
+      <section id="view-arsip" class="hidden">
+        <h1 id="arsip-title" class="text-3xl md:text-4xl font-extrabold mb-6">History</h1>
+        <div id="arsip-harian">
+          <div class="flex flex-wrap items-center gap-3 mb-4">
+            <input id="arsip-date" type="date" class="rounded-lg bg-[#edf2f7] border px-3 py-2 text-sm" />
+            <span id="arsip-harian-ringkas" class="text-sm text-on-surface-variant"></span>
+          </div>
+          <div class="bg-white rounded-xl border border-outline-variant sleek-shadow overflow-hidden">
+            <table class="w-full text-left">
+              <thead class="bg-primary/5 text-sm font-semibold text-on-surface-variant">
+                <tr><th class="py-4 px-6">Nomor</th><th class="py-4 px-6">Jalur</th><th class="py-4 px-6">Status</th><th class="py-4 px-6">Loket</th><th class="py-4 px-6">Selesai</th></tr>
+              </thead>
+              <tbody id="arsip-harian-body" class="divide-y divide-outline-variant"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="arsip-bulanan" class="hidden">
+          <div class="flex flex-wrap items-center gap-3 mb-4">
+            <input id="arsip-month" type="month" class="rounded-lg bg-[#edf2f7] border px-3 py-2 text-sm" />
+            <span id="arsip-bulanan-ringkas" class="text-sm text-on-surface-variant"></span>
+          </div>
+          <div class="bg-white rounded-xl border border-outline-variant sleek-shadow overflow-hidden">
+            <table class="w-full text-left">
+              <thead class="bg-primary/5 text-sm font-semibold text-on-surface-variant">
+                <tr><th class="py-4 px-6">Tanggal</th><th class="py-4 px-6">Total</th><th class="py-4 px-6">Selesai</th><th class="py-4 px-6">Dilewati</th><th class="py-4 px-6">Belum terlayani</th><th class="py-4 px-6"></th></tr>
+              </thead>
+              <tbody id="arsip-bulanan-body" class="divide-y divide-outline-variant"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section id="view-settings" class="hidden admin-only">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-primary mb-2">Pengaturan</h1>
+        <p class="text-on-surface-variant mb-8">Khusus administrator: penamaan loket, lanjutan, dan reset antrian.</p>
+        <div class="grid gap-6 max-w-4xl">
+          <div class="bg-white border rounded-xl p-6 sleek-shadow">
+            <h3 class="font-bold text-primary mb-4">Status Pelayanan (tampil di layar TV)</h3>
+            <label class="block text-sm font-semibold mb-2">Status</label>
+            <select id="svc-status" class="w-full mb-4 rounded-lg bg-[#edf2f7] border px-3 py-2"></select>
+            <label class="block text-sm font-semibold mb-2">Keterangan (opsional)</label>
+            <input id="svc-note" placeholder="Contoh: Pelayanan dibuka kembali pukul 13.00" class="w-full mb-4 rounded-lg bg-[#edf2f7] border px-3 py-2" />
+            <button id="svc-apply" type="button" class="bg-[#00A4E4] text-white px-4 py-2 rounded-lg font-semibold">Terapkan</button>
+          </div>
+          <div class="bg-white border rounded-xl p-6 sleek-shadow">
+            <h3 class="font-bold text-primary mb-4">Pengaturan Lanjutan</h3>
+            <label class="block text-sm font-semibold mb-2">Logo instansi</label>
+            <div class="flex items-center gap-3 mb-4">
+              <img id="logo-preview" class="h-12 w-12 object-contain rounded border border-outline-variant bg-white hidden" alt="Preview logo" />
+              <input id="logo-file" type="file" accept="image/*" class="flex-1 text-sm" />
+              <button id="upload-logo" type="button" class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold">Unggah</button>
+            </div>
+            <label class="block text-sm font-semibold mb-2">Nama instansi</label>
+            <input id="set-instansi" class="w-full mb-4 rounded-lg bg-[#edf2f7] border px-3 py-2" />
+            <label class="block text-sm font-semibold mb-2">Deskripsi login</label>
+            <input id="set-tagline" class="w-full mb-4 rounded-lg bg-[#edf2f7] border px-3 py-2" />
+            <label class="block text-sm font-semibold mb-2">Suara pengumuman</label>
+            <input id="voice-search" type="text" placeholder="Cari suara... (misal: Indonesia, David, Zira)" class="w-full mb-2 rounded-lg bg-[#edf2f7] border px-3 py-2 text-sm" />
+            <div class="flex gap-2 mb-4">
+              <select id="set-voice-name" class="flex-1 rounded-lg bg-[#edf2f7] border px-3 py-2"></select>
+              <button id="test-voice" type="button" class="px-4 py-2 rounded-lg border border-outline-variant text-sm font-semibold">Coba</button>
+            </div>
+            <label class="block text-sm font-semibold mb-2">Kecepatan bicara: <span id="voice-rate-label">0.88</span>x</label>
+            <input id="set-voice-rate" type="range" min="0.5" max="1.5" step="0.01" value="0.88" class="w-full mb-4" />
+            <label class="block text-sm font-semibold mb-2">Footer tiket</label>
+            <input id="set-footer" class="w-full mb-4 rounded-lg bg-[#edf2f7] border px-3 py-2" />
+            <label class="flex items-center gap-2 mb-4"><input id="set-voice" type="checkbox" /> Aktifkan suara panggilan</label>
+            <label class="block text-sm font-semibold mb-2">Suara pengumuman dinyalakan lewat</label>
+            <select id="set-voice-source" class="w-full mb-4 rounded-lg bg-[#edf2f7] border px-3 py-2">
+              <option value="display">Display (Layar TV)</option>
+              <option value="loket">Loket (Komputer Operator)</option>
+            </select>
+            <button id="save-settings" class="bg-[#00A4E4] text-white px-4 py-2 rounded-lg font-semibold">Simpan</button>
+          </div>
+          <div class="bg-white border rounded-xl p-6 sleek-shadow">
+            <h3 class="font-bold text-primary mb-4">Penamaan Loket</h3>
+            <div id="loket-names" class="space-y-2"></div>
+            <div class="flex gap-2 mt-4">
+              <input id="new-loket-name" placeholder="Nama loket baru" class="flex-1 rounded-lg bg-[#edf2f7] border px-3 py-2" />
+              <button id="add-loket" type="button" class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold">+ Tambah Loket</button>
+            </div>
+          </div>
+          <div class="bg-white border border-error-container rounded-xl p-6 sleek-shadow">
+            <h3 class="font-bold text-primary mb-2">Jalur antrian</h3>
+            <p class="text-sm text-on-surface-variant mb-4">Atur kode, nama, deskripsi, dan aktif/nonaktif jalur tanpa perlu ubah kode.</p>
+            <div id="prefix-rows" class="space-y-3"></div>
+            <div class="flex gap-2 mt-4">
+              <button id="add-prefix" type="button" class="px-3 py-2 rounded-lg border-outlane-variant text-sm font-semibold">+ Tambah Jalur</button>
+              <button id="save-prefixes" type="button" class="bg-primary text-white px-4 py-2 rounded-lg font-semibold text-sm">Simpan Jalur</button>
+            </div>
+          </div>
+          <div class="bg-white border border-error-container rounded-xl p-6">
+            <h3 class="font-bold text-error mb-2">Reset Antrian Hari Ini</h3>
+            <p class="text-sm text-on-surface-variant mb-4">Menghapus seluruh tiket tanggal berjalan. Tidak bisa dibatalkan.</p>
+            <button id="reset-btn" class="bg-error text-white px-4 py-2 rounded-lg font-semibold">Reset Antrian</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

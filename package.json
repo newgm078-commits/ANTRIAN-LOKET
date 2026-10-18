@@ -1,0 +1,22 @@
+{
+  "name": "sistem-loket",
+  "version": "1.0.0",
+  "description": "Sistem Loket Antrian",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "build:css": "tailwindcss -i ./public/css/tailwind-input.css -o ./public/css/tailwind.css --minify"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.10.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^2.4.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

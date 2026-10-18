@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riwayat Harian · Sistem Loket Antrian</title>
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="bg-background min-h-screen flex flex-col">
+  <header class="bg-primary-container text-on-primary shrink-0">
+    <div class="loket-header-inner max-w-[1440px] mx-auto min-h-16 px-4 md:px-6 py-2 flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex items-center gap-2 min-w-0">
+        <img id="instansi-logo" class="h-8 w-8 object-contain rounded hidden shrink-0" alt="Logo instansi" />
+        <div class="min-w-0">
+          <h1 id="instansi-title" class="font-bold uppercase tracking-tight text-sm md:text-base truncate">SISTEM LOKET ANTRIAN</h1>
+        </div>
+      </div>
+      <nav class="flex gap-4 text-xs md:text-sm font-semibold shrink-0">
+        <a class="opacity-70 hover:text-secondary-container" href="/admin.html">DASHBOARD</a>
+        <a class="opacity-70 hover:text-secondary-container" href="/loket.html">LOKET</a>
+        <a class="border-b-2 border-secondary-container pb-0.5">RIWAYAT</a>
+        <a class="opacity-70 hover:text-secondary-container" href="/display.html" target="_blank">DISPLAY</a>
+      </nav>
+      <div class="flex items-center gap-2 md:gap-3 shrink-0">
+        <span id="loket-badge" class="bg-primary px-3 py-1 rounded-full font-bold text-secondary-container text-sm">LOKET</span>
+        <span class="hidden sm:flex items-center gap-2 text-xs font-tech uppercase"><span id="koneksi-dot" class="w-2 h-2 rounded-full bg-tertiary-fixed"></span><span id="koneksi-teks">Connected</span></span>
+        <span id="live-clock" class="font-tech text-sm"></span>
+        <button onclick="logout()" class="text-sm opacity-80">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 p-4 md:p-6 max-w-[1440px] mx-auto w-full">
+    <h2 class="text-3xl md:text-4xl font-extrabold text-primary mb-1">Riwayat Harian</h2>
+    <p id="riwayat-ringkas" class="text-on-surface-variant mb-6">Memuat data...</p>
+
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <button id="hari-sebelum" type="button" class="px-3 py-2 border border-outline-variant rounded-lg bg-white text-sm font-semibold">Hari sebelumnya</button>
+      <input id="riwayat-date" type="date" class="rounded-lg bg-[#edf2f7] border px-3 py-2 text-sm" />
+      <button id="hari-sesudah" type="button" class="px-3 py-2 border border-outline-variant rounded-lg bg-white text-sm font-semibold">Hari berikutnya</button>
+      <button id="hari-ini" type="button" class="px-3 py-2 rounded-lg bg-primary text-white text-sm font-semibold">Hari ini</button>
+      <button id="riwayat-reload" type="button" class="px-3 py-2 border border-outline-variant rounded-lg bg-white text-sm font-semibold">Muat ulang</button>
+    </div>
+
+    <div class="bg-white rounded-xl border border-outline-variant sleek-shadow overflow-hidden">
+      <table class="w-full text-left">
+        <thead class="bg-primary/5 text-sm font-semibold text-on-surface-variant">
+          <tr>
+            <th class="py-4 px-6">Nomor</th>
+            <th class="py-4 px-6">Jalur</th>
+            <th class="py-4 px-6">Status</th>
+            <th class="py-4 px-6">Loket</th>
+            <th class="py-4 px-6">Selesai</th>
+          </tr>
+        </thead>
+        <tbody id="riwayat-body" class="divide-y divide-outline-variant"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/riwayat.js"></script>
+</body>
+</html>

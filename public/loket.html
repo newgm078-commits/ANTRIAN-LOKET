@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kontrol Loket · Sistem Loket Antrian</title>
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="bg-background loket-shell flex flex-col">
+  <header class="bg-primary-container text-on-primary shrink-0">
+    <div class="loket-header-inner max-w-[1440px] mx-auto min-h-16 px-4 md:px-6 py-2 flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex items-center gap-2 min-w-0">
+        <img id="instansi-logo" class="h-8 w-8 object-contain rounded hidden shrink-0" alt="Logo instansi" />
+        <div class="min-w-0">
+          <h1 id="instansi-title" class="font-bold uppercase tracking-tight text-sm md:text-base truncate">SISTEM LOKET ANTRIAN</h1>
+        </div>
+      </div>
+      <nav class="flex gap-4 text-xs md:text-sm font-semibold shrink-0">
+        <a class="opacity-70 hover:text-secondary-container" href="/admin.html">DASHBOARD</a>
+        <a class="border-b-2 border-secondary-container pb-0.5">LOKET</a>
+        <a class="opacity-70 hover:text-secondary-container" href="/riwayat.html">RIWAYAT</a>
+        <a class="opacity-70 hover:text-secondary-container" href="/display.html" target="_blank">DISPLAY</a>
+      </nav>
+      <div class="flex items-center gap-2 md:gap-3 shrink-0">
+        <span id="loket-badge" class="bg-primary px-3 py-1 rounded-full font-bold text-secondary-container text-sm">LOKET</span>
+        <select id="loket-switch" aria-label="Ganti loket" class="hidden bg-primary text-secondary-container text-sm font-bold rounded-full px-3 py-1"></select>
+        <span class="hidden sm:flex items-center gap-2 text-xs font-tech uppercase"><span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span>Connected</span>
+        <span id="live-clock" class="font-tech text-sm"></span>
+        <button onclick="logout()" class="text-sm opacity-80">Keluar</button>
+      </div>
+    </div>
+  </header>
+  <main class="flex-1 min-h-0 p-3 md:p-4 max-w-[1440px] mx-auto w-full flex gap-4 overflow-hidden">
+    <aside class="w-[240px] shrink-0 min-h-0 bg-surface-container-lowest border border-outline-variant rounded-xl p-3 flex flex-col">
+      <div class="mb-3 shrink-0">
+        <div class="flex justify-between items-center gap-2">
+          <h2 class="font-bold text-primary text-sm leading-tight">Daftar Antrian Terpadu</h2>
+          <span id="queue-count" class="font-tech text-xs bg-surface-container-high px-2 py-1 rounded shrink-0">0 antri</span>
+        </div>
+        <select id="queue-filter-prefix" class="mt-2 w-full font-tech text-xs rounded bg-[#edf2f7] border px-2 py-1">
+          <option value="">Semua Jalur</option>
+        </select>
+      </div>
+      <div id="queue-list" class="flex-1 min-h-0 overflow-y-auto space-y-2 bg-surface-container-low rounded-lg p-2 border border-outline-variant/60"></div>
+    </aside>
+    <section id="lane-grid" class="lane-grid flex-1 min-h-0 min-w-0"></section>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/loket.js"></script>
+</body>
+</html>

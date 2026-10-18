@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Display TV · Sistem Loket Antrian</title>
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="h-screen overflow-hidden bg-background">
+  <header class="bg-primary-container text-on-primary h-20 px-10 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img id="instansi-logo" class="h-10 w-10 object-contain rounded hidden" alt="Logo instansi" />
+      <div>
+        <h1 id="instansi-title" class="text-2xl font-extrabold tracking-tight">SISTEM LOKET ANTRIAN</h1>
+        <p class="font-tech text-xs tracking-[0.22em] text-secondary-container">LAYAR ANTRIAN</p>
+      </div>
+    </div>
+    <div class="disp-cal">
+      <div class="disp-cal-tile">
+        <span id="cal-month" class="disp-cal-month">—</span>
+        <span id="cal-day" class="disp-cal-day">—</span>
+      </div>
+      <div class="disp-cal-text">
+        <div id="cal-weekday" class="disp-cal-weekday">—</div>
+        <div id="cal-full" class="disp-cal-full">—</div>
+      </div>
+    </div>
+  </header>
+  <main id="disp-main" class="disp-main h-[calc(100vh-80px)] p-6">
+    <div class="disp-now">
+      <div class="accent-bar bg-[#00A4E4]"></div>
+      <p class="disp-now-label">NOMOR DIPANGGIL</p>
+      <h2 id="now-code" class="disp-now-code">—</h2>
+      <p id="now-loket" class="disp-now-loket">Menunggu panggilan</p>
+    </div>
+    <div class="disp-panel disp-panel-loket">
+      <div class="disp-panel-title">Status Loket</div>
+      <div id="loket-list" class="disp-loket-list"></div>
+    </div>
+    <div class="disp-bottom-left">
+      <div class="disp-panel disp-clock-panel">
+        <span class="disp-clock-label">WAKTU SAAT INI</span>
+        <span id="live-clock" class="disp-clock">--.--.--</span>
+      </div>
+      <div class="disp-panel disp-status-panel">
+        <div class="disp-panel-title">Status Pelayanan</div>
+        <div id="service-status" class="disp-status-badge is-hijau">MELAYANI</div>
+        <div id="service-note" class="disp-status-note"></div>
+      </div>
+    </div>
+    <div class="disp-panel disp-panel-wait">
+      <div class="disp-panel-title">Antrian Menunggu</div>
+      <div id="waiting-summary" class="disp-waiting"></div>
+    </div>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/display.js"></script>
+</body>
+</html>
