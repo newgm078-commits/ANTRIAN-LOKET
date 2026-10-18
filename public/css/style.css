@@ -419,3 +419,12 @@ body {
 /* Header seragam (Admin, Loket, Riwayat): sisi kiri dan kanan sama lebar supaya menu selalu sama di tengah*/
 .hdr-left { flex: 1 1 0; }
 .hdr-right { flex: 1 1 0; justify-content: flex-end; }
+
+/* Corak header (Admin, Kontrol Loket, Riwayat, Ambil Nomor): garis diagonal tipis, cahaya biru muda di sudut, dan garis biru muda di bawah */
+.hdr-pattern {
+  background-image:
+    radial-gradient(circle 280px at 100% 0%, rgba(65, 190, 255, 0.32), rgba(65, 190, 255, 0) 100%),
+    radial-gradient(circle 240px at 0% 100%, rgba(65, 190, 255, 0.22), rgba(65, 190, 255, 0) 100%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0 2px, rgba(255, 255, 255, 0) 2px 14px);
+  box-shadow: inset 0 -3px 0 rgba(65, 190, 255, 0.6);
+}
