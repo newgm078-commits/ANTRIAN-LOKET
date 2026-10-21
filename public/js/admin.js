@@ -352,7 +352,7 @@ async function loadPrefixSettings() {
 
 // Titik mulai halaman: cek login, isi info user, pasang semua event listener tombol
 (async () => {
-  user = await requireUser(["admin", "loket"]);
+  user = await requireUser(["admin"]);
   if (!user) return;
   document.getElementById("welcome-name").textContent = user.displayName;
   document.getElementById("welcome-role").textContent = user.role;

@@ -84,7 +84,7 @@ async function muatRiwayat() {
   startClock("live-clock");
   
   // Badge loket: sama seperti di halaman Kontrol Loket (admin dianggap Loket 1)
-  if (user.role === "admin" && !user.loketNumber) user.loketNumber = bacaLoketAdmin() || 1;
+  if (user.role === "admin") { if (!user.loketNumber) user.loketNumber = bacaLoketAdmin() || 1; document.getElementById("nav-admin-dashboard")?.classList.remove("hidden"); }
   document.getElementById("loket-badge").textContent = `LOKET ${user.loketNumber}`;
 
   // Indikator koneksi: tampil "Connected" seperti di Kontrol Loket, baru berubah merah kalau koneksi benar-benar putus

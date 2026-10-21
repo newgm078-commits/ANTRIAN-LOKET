@@ -184,7 +184,7 @@ function paint(next) {
   if (user.role === "admin" && !user.loketNumber) user.loketNumber = bacaLoketAdmin() || 1;
   document.getElementById("loket-badge").textContent = `LOKET ${user.loketNumber}`;
   // Admin memakai pilihan loket (bukan badge), jadi badge disembunyikan sejak awal
-  if (user.role === "admin") document.getElementById("loket-badge").classList.add("hidden");
+  if (user.role === "admin") { document.getElementById("loket-badge").classList.add("hidden"); document.getElementById("nav-admin-dashboard")?.classList.remove("hidden"); }
   startClock("live-clock");
   document.getElementById("queue-filter-prefix")?.addEventListener("change", renderQueue);
   // Admin memilih loket lain: pindah posisi, ubah badge, lalu gambar ulang kontrol jalur

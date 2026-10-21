@@ -37,11 +37,82 @@ app.use("/api/antrian", antrianRoutes);
 app.use("/api/loket", loketRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Layani semua file statis (html, css, js, gambar, dll) dari folder public/
-app.use(express.static(path.join(__dirname, "public")));
+// Helper: tentukan halaman tujuan utama berdasarkan role akun
+function getHomeUrl(role) {
+  if (role === "admin") return "/admin.html";
+  if (role === "loket") return "/loket.html";
+  if (role === "queue_taker") return "/queue-taker.html";
+  return "/login.html";
+}
 
-// Kalau orang buka alamat utama ("/"), langsung lempar ke halaman login
-app.get("/", (req, res) => {
+// Middleware proteksi halaman web (.html):
+// Cegah akses via URL jika belum login atau role tidak sesuai
+function requirePageAuth(allowedRoles = []) {
+  return (req, res, next) => {
+    // 1. Cek apakah sesi login aktif
+    if (!req.session || !req.session.user) {
+      return res.redirect("/login.html");
+    }
+    // 2. Cek apakah role akun diizinkan
+    if (allowedRoles.length > 0 && !allowedRoles.includes(req.session.user.role)) {
+      // Alihkan ke halaman sesuai hak aksesnya
+      return res.redirect(getHomeUrl(req.session.user.role));
+    }
+    next();
+  };
+}
+
+// --- RUTE HALAMAN WEB (DIPROTEKSI DI SERVER) ---
+
+// Halaman utama & login: jika sudah login, langsung lempar ke dashboard masing-masing
+app.get(["/", "/login.html", "/login"], (req, res) => {
+  if (req.session && req.session.user) {
+    return res.redirect(getHomeUrl(req.session.user.role));
+  }
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+// Halaman Admin: hanya role 'admin'
+app.get(["/admin.html", "/admin"], requirePageAuth(["admin"]), (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+// Halaman Kontrol Loket: role 'loket' dan 'admin'
+app.get(["/loket.html", "/loket"], requirePageAuth(["loket", "admin"]), (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "loket.html"));
+});
+
+// Halaman Ambil Nomor / Kios: role 'queue_taker' dan 'admin'
+app.get(["/queue-taker.html", "/queue-taker", "/kios"], requirePageAuth(["queue_taker", "admin"]), (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "queue-taker.html"));
+});
+
+// Halaman Riwayat: role 'admin' dan 'loket'
+app.get(["/riwayat.html", "/riwayat"], requirePageAuth(["admin", "loket"]), (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "riwayat.html"));
+});
+
+// Halaman Display TV: untuk layar monitor ruang tunggu (publik)
+app.get(["/display.html", "/display"], (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "display.html"));
+});
+
+// Blokir semua akses langsung ke file .html lain yang tidak terdaftar
+app.use((req, res, next) => {
+  if (req.path.endsWith(".html")) {
+    return res.redirect("/login.html");
+  }
+  next();
+});
+
+// Layani semua file statis lainnya (css, js, gambar, font, uploads) dari folder public/
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
+
+// Fallback untuk URL lain yang tidak terdaftar
+app.use((req, res) => {
+  if (req.session && req.session.user) {
+    return res.redirect(getHomeUrl(req.session.user.role));
+  }
   res.redirect("/login.html");
 });
 
