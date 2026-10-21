@@ -202,7 +202,7 @@ async function loadSettings() {
   }
 
   // Isi dropdown pilihan suara TTS, nunggu daftar suara browser siap dulu kalau belum
-    // Simpan daftar suara lengkap (tidak difilter) supaya bisa dipakai ulang saat pencarian diketik
+  // Daftar suara Indonesia OFFLINE (terpasang di komputer ini), disimpan supaya bisa disaring ulang saat pencarian diketik
   let semuaSuara = [];
 
   const renderOpsiSuara = (kataKunci = "") => {
@@ -216,7 +216,7 @@ async function loadSettings() {
 
     select.innerHTML = tersaring.length
       ? tersaring.map((v) => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join("")
-      : `<option value="">Tidak ada suara yang cocok</option>`;
+      : `<option value="">${semuaSuara.length ? "Tidak ada suara yang cocok" : "Tidak ada suara Indonesia offline"}</option>`;
 
     // Kalau suara yang sudah tersimpan masih ada di hasil filter, tetap pilih itu
     if (settings.tts_voice && tersaring.some((v) => v.name === settings.tts_voice)) {
@@ -224,15 +224,30 @@ async function loadSettings() {
     }
   };
 
-  const isiDaftarSuara = () => {
-    semuaSuara = window.speechSynthesis.getVoices() || [];
-    renderOpsiSuara();
+  // Tampilkan keterangan: ada/tidaknya suara Indonesia offline di komputer ini
+  const tampilkanKeteranganSuara = (jumlahOnline) => {
+    const hint = document.getElementById("voice-hint");
+    if (!hint) return;
+    if (semuaSuara.length === 0) {
+      hint.className = "text-xs mb-4 text-error font-semibold";
+      hint.textContent =
+        "Belum ada suara Bahasa Indonesia offline di komputer ini, jadi pengumuman suara tidak akan berbunyi." +
+        (jumlahOnline ? ` (Ada ${jumlahOnline} suara Indonesia online, tapi butuh internet sehingga tidak dipakai.)` : "");
+      return;
+    }
+    const tersimpanAda = !settings.tts_voice || semuaSuara.some((v) => v.name === settings.tts_voice);
+    hint.className = "text-xs mb-4 text-on-surface-variant";
+    hint.textContent =
+      `${semuaSuara.length} suara Indonesia offline tersedia di komputer ini.` +
+      (tersimpanAda ? "" : ` Suara tersimpan "${settings.tts_voice}" tidak ada di komputer ini, jadi dipakai suara Indonesia offline lain.`);
   };
-  if (window.speechSynthesis.getVoices().length) {
-    isiDaftarSuara();
-  } else {
-    window.speechSynthesis.addEventListener("voiceschanged", isiDaftarSuara, { once: true });
-  }
+
+  const isiDaftarSuara = () => {
+    const voices = window.speechSynthesis.getVoices() || [];
+    semuaSuara = voices.filter((v) => v.localService && suaraIndo(v));
+    renderOpsiSuara();
+    tampilkanKeteranganSuara(voices.filter((v) => !v.localService && suaraIndo(v)).length);
+  };
 
   // Setiap kali kotak pencarian diketik, langsung saring ulang daftar dropdown-nya
   document.getElementById("voice-search")?.addEventListener("input", (e) => {
@@ -452,9 +467,13 @@ async function loadPrefixSettings() {
   // Tombol "Coba": langsung ucapkan contoh kalimat pakai suara & kecepatan yang sedang dipilih
   document.getElementById("test-voice")?.addEventListener("click", () => {
     const name = document.getElementById("set-voice-name").value;
-    const voice = window.speechSynthesis.getVoices().find((v) => v.name === name);
+    const voice = window.speechSynthesis.getVoices().find((v) => v.name === name && v.localService);
+    if (!voice) {
+      toast("Tidak ada suara Indonesia offline untuk dicoba");
+      return;
+    }
     const utter = new SpeechSynthesisUtterance("Nomor antrian A satu dua tiga, silakan menuju loket satu.");
-    if (voice) utter.voice = voice;
+    utter.voice = voice;
     utter.lang = "id-ID";
     utter.rate = window.__ttsRate || 0.88;
     window.speechSynthesis.speak(utter);

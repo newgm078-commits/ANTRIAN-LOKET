@@ -74,14 +74,15 @@ function ejaAngka(n) {
     .join(" ");
 }
 
-// Cari suara text-to-speech Bahasa Indonesia dari daftar suara yang tersedia di browser/OS
+// Cek apakah sebuah suara berbahasa Indonesia (dari kode bahasa atau namanya)
+function suaraIndo(v) {
+  return (v.lang && v.lang.toLowerCase().replace("_", "-").startsWith("id")) || /indonesia/i.test(v.name);
+}
+
+// Cari suara Bahasa Indonesia yang terpasang di komputer ini (offline). Suara online (localService = false) tidak dipakai
 function suaraIndonesia() {
   const voices = window.speechSynthesis.getVoices() || [];
-  return (
-    voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("id")) ||
-    voices.find((v) => /indonesia/i.test(v.name)) ||
-    null
-  );
+  return voices.find((v) => v.localService && suaraIndo(v)) || null;
 }
 
 // Ucapkan panggilan nomor antrian lewat text-to-speech, menunggu suara siap dimuat dulu
@@ -102,18 +103,26 @@ function speakTicket(ticket, loketNumber) {
   };
 
   // Fungsi internal: coba berulang kali sampai daftar suara browser siap, baru bicara
-  const cobaBicara = (percobaanTersisa) => {
-   const voices = window.speechSynthesis.getVoices() || [];
-   if (voices.length > 0) {
-     const preferredName = window.__ttsVoiceName;
-     const pilihan = (preferredName && voices.find((v) => v.name === preferredName)) || suaraIndonesia();
-     ucapkan(pilihan);
-     return;
-   }
-   if (percobaanTersisa <= 0) { ucapkan(null); return; }
-   setTimeout(() => cobaBicara(percobaanTersisa - 1), 150);
+    const cobaBicara = (percobaanTersisa) => {
+    const voices = window.speechSynthesis.getVoices() || [];
+    if (voices.length > 0) {
+      // Hanya suara offline yang dipakai: pilihan Admin kalau ada di komputer ini, kalau tidak suara Indonesia offline apa pun
+      const preferredName = window.__ttsVoiceName;
+      const pilihan = (preferredName && voices.find((v) => v.name === preferredName && v.localService)) || suaraIndonesia();
+      if (!pilihan) {
+        toast("Suara Indonesia offline belum terpasang di komputer ini");
+        return;
+      }
+      ucapkan(pilihan);
+      return;
+    }
+    if (percobaanTersisa <= 0) {
+      toast("Daftar suara tidak tersedia di komputer ini");
+      return;
+    }
+    setTimeout(() => cobaBicara(percobaanTersisa - 1), 150);
   };
-  cobaBicara(10); // tunggu sampai 1.5 detik suara siap
+  cobaBicara(10);
 }
 
 // Sambungkan ke server lewat Socket.io, terima update antrian real-time, dan bicara kalau halaman ini ditunjuk sebagai sumber suara

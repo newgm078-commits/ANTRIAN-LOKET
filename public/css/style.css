@@ -423,8 +423,9 @@ body {
 /* Corak header (Admin, Kontrol Loket, Riwayat, Ambil Nomor): garis diagonal tipis, cahaya biru muda di sudut, dan garis biru muda di bawah */
 .hdr-pattern {
   background-image:
-    radial-gradient(circle 280px at 100% 0%, rgba(65, 190, 255, 0.32), rgba(65, 190, 255, 0) 100%),
-    radial-gradient(circle 240px at 0% 100%, rgba(65, 190, 255, 0.22), rgba(65, 190, 255, 0) 100%),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0 2px, rgba(255, 255, 255, 0) 2px 14px);
-  box-shadow: inset 0 -3px 0 rgba(65, 190, 255, 0.6);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 90' preserveAspectRatio='none'%3E%3Cpath fill='white' fill-opacity='.08' d='M0 55 C150 20 300 90 450 55 S750 20 900 55 S1080 80 1200 45 V90 H0 Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 90' preserveAspectRatio='none'%3E%3Cpath fill='%2341beff' fill-opacity='.16' d='M0 70 C200 40 350 95 600 68 S1000 45 1200 72 V90 H0 Z'/%3E%3C/svg%3E"),
+    radial-gradient(circle 300px at 100% 0%, rgba(65, 190, 255, 0.28), rgba(65, 190, 255, 0) 100%);
+  background-size: 100% 100%, 100% 100%, auto;
+  background-repeat: no-repeat;
 }
