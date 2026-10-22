@@ -26,6 +26,9 @@
         <span id="role-label" class="bg-primary px-3 py-1 rounded-full font-bold text-secondary-container text-sm">ADMIN</span>
         <span class="hidden sm:flex items-center gap-2 text-xs font-tech uppercase"><span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span>Connected</span>
         <span id="live-clock" class="font-tech text-sm"></span>
+        <button onclick="bukaModalGantiPassword()" class="text-sm opacity-80 hover:opacity-100 flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">key</span> Ganti Password
+        </button>
         <button onclick="logout()" class="text-sm opacity-80">Keluar</button>
       </div>
     </div>
@@ -154,7 +157,7 @@
             <label class="block text-sm font-semibold mb-2">Logo instansi</label>
             <div class="flex items-center gap-3 mb-4">
               <img id="logo-preview" class="h-12 w-12 object-contain rounded border border-outline-variant bg-white hidden" alt="Preview logo" />
-              <input id="logo-file" type="file" accept="image/*" class="flex-1 text-sm" />
+              <input type="file" id="logo-file" accept=".png,.jpg,.jpeg,.webp" class="w-full mb-3 text-sm" />
               <button id="upload-logo" type="button" class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold">Unggah</button>
             </div>
             <label class="block text-sm font-semibold mb-2">Nama instansi</label>

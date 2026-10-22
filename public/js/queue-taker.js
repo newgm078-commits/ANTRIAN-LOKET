@@ -40,6 +40,11 @@ function renderLanes(state) {
 
 // ambil() - Ambil nomor antrian: minta tiket baru ke server, isi tampilan tiket & struk cetak, lalu buka modal
 async function ambil(prefix) {
+  if (sedangMengambilTiket) return;
+  sedangMengambilTiket = true;
+  // Berikan efek visual redup dan nonaktifkan klik pada seluruh kartu jalur
+  const buttons = document.querySelectorAll("#lanes button");
+  buttons.forEach((btn) => btn.classList.add("pointer-events-none", "opacity-50"));
   try {
     // priority: true jika kotak "prioritas" dicentang
     const priority = document.getElementById("priority").checked;
@@ -58,6 +63,12 @@ async function ambil(prefix) {
     document.getElementById("ticket-modal").classList.remove("hidden");
   } catch (err) {
     toast(err.message);
+  } finally {
+    // Buka kembali tombol kartu jalur setelah jeda 2.5 detik
+    setTimeout(() => {
+      sedangMengambilTiket = false;
+      buttons.forEach((btn) => btn.classList.remove("pointer-events-none", "opacity-50"));
+    }, 2500);
   }
 }
 

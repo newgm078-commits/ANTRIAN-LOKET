@@ -69,16 +69,7 @@ router.put("/:number", requireAuth, requireRole("admin"), (req, res) => {
   res.json({ ok: true });
 });
 
-// POST / (duplikat) - Tambah loket versi lama: tanpa pembuatan akun; TIDAK AKAN PERNAH JALAN karena kalah dulu oleh POST / di atas
-router.post("/", requireAuth, requireRole("admin"), (req, res) => {
-  const name = String(req.body.name || "").trim();
-  if (!name) return res.status(400).json({ error: "Nama loket wajib" });
-  const row = db.prepare("SELECT MAX(number) AS maxn FROM lokets").get();
-  const number = (row?.maxn || 0) + 1;
-  db.prepare("INSERT INTO lokets (number, name, active) VALUES (?, ?, 1)").run(number, name);
-  req.app.get("io").emit("queue:update", antrian.getQueueBundle());
-  res.json({ ok: true, number });
-});
+
 
 // DELETE /:number - Hapus loket: hapus loket + akunnya (min. 1 loket tersisa & tidak sedang melayani)
 router.delete("/:number", requireAuth, requireRole("admin"), (req, res) => {

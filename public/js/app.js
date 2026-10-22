@@ -184,3 +184,94 @@ const STATUS_PELAYANAN = [
   { kode: "tutup", label: "TUTUP SEMENTARA", warna: "abu" },
   { kode: "gangguan", label: "GANGGUAN SISTEM", warna: "merah" }
 ];
+
+// =========================================================================
+// MODAL GANTI PASSWORD MANDIRI (BISA DIPAKAI DI ADMIN MAUPUN LOKET)
+// =========================================================================
+function bukaModalGantiPassword() {
+  let modal = document.getElementById("modal-ganti-password");
+  
+  // Jika elemen modal belum ada di halaman, buat otomatis
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modal-ganti-password";
+    modal.className = "fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4";
+    modal.innerHTML = `
+      <div class="bg-white rounded-xl max-w-md w-full p-6 sleek-shadow text-on-surface">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="text-lg font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">lock_reset</span> Ganti Password Akun
+          </h3>
+          <button id="btn-tutup-modal-pwd" class="text-on-surface-variant hover:text-error text-xl font-bold">&times;</button>
+        </div>
+        <form id="form-ganti-password" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold mb-1">Password Saat Ini</label>
+            <input type="password" id="pwd-current" class="w-full rounded-lg bg-[#edf2f7] border px-3 py-2 text-sm outline-none focus:border-[#00A4E4]" placeholder="Masukkan password lama" required autocomplete="current-password" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1">Password Baru (Min. 6 Karakter)</label>
+            <input type="password" id="pwd-new" minlength="6" class="w-full rounded-lg bg-[#edf2f7] border px-3 py-2 text-sm outline-none focus:border-[#00A4E4]" placeholder="Minimal 6 karakter" required autocomplete="new-password" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1">Konfirmasi Password Baru</label>
+            <input type="password" id="pwd-confirm" minlength="6" class="w-full rounded-lg bg-[#edf2f7] border px-3 py-2 text-sm outline-none focus:border-[#00A4E4]" placeholder="Ulangi password baru" required autocomplete="new-password" />
+          </div>
+          <p id="pwd-error" class="hidden text-error text-xs font-semibold"></p>
+          <div class="flex gap-2 pt-2">
+            <button type="button" id="btn-batal-modal-pwd" class="flex-1 border border-outline-variant py-2 rounded-lg text-sm font-semibold hover:bg-surface-container">Batal</button>
+            <button type="submit" id="btn-simpan-modal-pwd" class="flex-1 bg-primary text-white py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">Simpan</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Event listener untuk tombol tutup / batal
+    const tutup = () => modal.classList.add("hidden");
+    document.getElementById("btn-tutup-modal-pwd").onclick = tutup;
+    document.getElementById("btn-batal-modal-pwd").onclick = tutup;
+
+    // Event listener kirim form ganti password
+    document.getElementById("form-ganti-password").onsubmit = async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById("pwd-error");
+      const btnSimpan = document.getElementById("btn-simpan-modal-pwd");
+      errEl.classList.add("hidden");
+
+      const currentPassword = document.getElementById("pwd-current").value;
+      const newPassword = document.getElementById("pwd-new").value;
+      const confirmPassword = document.getElementById("pwd-confirm").value;
+
+      if (newPassword !== confirmPassword) {
+        errEl.textContent = "Konfirmasi password baru tidak cocok!";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      btnSimpan.disabled = true;
+      btnSimpan.textContent = "Menyimpan...";
+
+      try {
+        await api("/api/auth/password", {
+          method: "PUT",
+          body: { currentPassword, newPassword, confirmPassword }
+        });
+        toast("Password berhasil diubah!");
+        document.getElementById("form-ganti-password").reset();
+        tutup();
+      } catch (err) {
+        errEl.textContent = err.message || "Gagal mengubah password";
+        errEl.classList.remove("hidden");
+      } finally {
+        btnSimpan.disabled = false;
+        btnSimpan.textContent = "Simpan";
+      }
+    };
+  }
+
+  // Tampilkan modal dan reset form
+  document.getElementById("form-ganti-password").reset();
+  document.getElementById("pwd-error").classList.add("hidden");
+  modal.classList.remove("hidden");
+}

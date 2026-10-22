@@ -20,20 +20,61 @@ const router = express.Router();
 const uploadDir = path.join(__dirname, "..", "public", "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// upload: konfigurasi multer - simpan logo ke disk, maks 2MB, hanya file gambar
+// Konfigurasi upload multer: simpan ke disk, batas 2MB, whitelist ekstensi ketat
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname) || ".png";
+      const ext = path.extname(file.originalname).toLowerCase() || ".png";
       cb(null, `logo-${Date.now()}${ext}`);
     }
   }),
-  limits: { fileSize: 2 * 1024 * 1024 },
+  limits: { fileSize: 2 * 1024 * 1024 }, // Maksimal 2MB
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) return cb(new Error("File harus berupa gambar"));
+    const ext = path.extname(file.originalname).toLowerCase();
+    const mime = (file.mimetype || "").toLowerCase();
+    // 1. TOLAK SECARA EKSPLISIT JIKA FORMAT SVG (Pencegahan XSS)
+    if (ext === ".svg" || mime.includes("svg")) {
+      return cb(new Error("Format SVG dilarang demi keamanan sistem (XSS Prevention)"));
+    }
+    // 2. HANYA IZINKAN FORMAT RASTER STANDAR (.png, .jpg, .jpeg, .webp)
+    if (!ALLOWED_EXT.includes(ext) || !ALLOWED_MIME.includes(mime)) {
+      return cb(new Error("Hanya file gambar format .png, .jpg, .jpeg, dan .webp yang diizinkan"));
+    }
     cb(null, true);
   }
+});
+
+// POST /logo - Upload logo baru dengan penanganan error JSON & pembersihan file lama
+router.post("/logo", requireAuth, requireRole("admin"), (req, res) => {
+  upload.single("logo")(req, res, (err) => {
+    // Tangani error multer (ukuran melebihi batas atau format file ditolak)
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ error: "Ukuran file logo maksimal 2MB" });
+      }
+      return res.status(400).json({ error: `Gagal upload: ${err.message}` });
+    } else if (err) {
+      // Error dari fileFilter (menolak SVG atau format tidak dikenal)
+      return res.status(400).json({ error: err.message });
+    }
+    // Pastikan ada file yang diunggah
+    if (!req.file) {
+      return res.status(400).json({ error: "File logo wajib dipilih" });
+    }
+    // PENGHAPUSAN FILE LAMA: Hapus logo lama agar tidak menumpuk di disk
+    const oldLogo = getSetting("logo");
+    if (oldLogo && oldLogo.startsWith("/uploads/")) {
+      const oldPath = path.join(__dirname, "..", "public", oldLogo);
+      if (fs.existsSync(oldPath)) {
+        try { fs.unlinkSync(oldPath); } catch (e) {}
+      }
+    }
+    const url = `/uploads/${req.file.filename}`;
+    setSetting("logo", url);
+    req.app.get("io").emit("queue:update", antrian.getQueueBundle());
+    res.json({ ok: true, url });
+  });
 });
 
 // GET /settings - Ambil pengaturan: menampilkan semua setting sistem (admin)

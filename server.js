@@ -1,15 +1,52 @@
 // Import modul bawaan Node.js & library pihak ketiga
+const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const session = require("express-session");
 const http = require("http");
 const { Server } = require("socket.io");
 
+// Membaca file .env mengunakan node.js modern
+if (fs.existsSync(".env")) {
+  process.loadEnvFile();
+}
+
+// VALIDASI KETAT: Server MENOLAK MENYALA jika SESSION_SECRET belum disetel di .env
+if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.trim() === "") {
+  console.error("\x1b[31m%s\x1b[0m", "=================================================================");
+  console.error("\x1b[31m%s\x1b[0m", " [FATAL ERROR] Variabel SESSION_SECRET belum disetel di file .env!");
+  console.error(" Demi keamanan, sistem menolak berjalan menggunakan kunci default.");
+  console.error(" Silakan buat file .env dan tentukan SESSION_SECRET yang aman.");
+  console.error("\x1b[31m%s\x1b[0m", "=================================================================");
+  process.exit(1); // Hentikan server seketika
+}
+
 // Import semua route (pembagi urusan per fitur: auth, antrian, loket, admin)
 const authRoutes = require("./routes/auth");
 const antrianRoutes = require("./routes/antrian");
 const loketRoutes = require("./routes/loket");
 const adminRoutes = require("./routes/admin");
+
+// =========================================================================
+// PENGUATAN KEAMANAN HEADER HTTP (SECURITY HEADERS)
+// =========================================================================
+
+// 1. NONAKTIFKAN IDENTITAS SERVER (Mencegah scanner mendeteksi Express/Node.js)
+app.disable("x-powered-by");
+
+// 2. PASANG HEADER KEAMANAN STANDAR PADA SETIAP RESPONS
+app.use((req, res, next) => {
+  // Cegah Clickjacking: melarang halaman antrian/login disematkan ke dalam <iframe> di situs lain
+  res.setHeader("X-Frame-Options", "DENY");
+
+  // Cegah MIME Sniffing: memaksa browser mengikuti Content-Type asli file (mencegah eksekusi script tersembunyi)
+  res.setHeader("X-Content-Type-Options", "nosniff");
+
+  // Lindungi privasi URL saat navigasi keluar
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  next();
+});
 
 // Buat aplikasi Express & bungkus dengan server HTTP biasa (supaya bisa dipasangi Socket.io)
 const app = express();
@@ -19,15 +56,29 @@ const io = new Server(server);
 // Simpan "io" supaya bisa diakses dari file route lain lewat req.app.get("io")
 app.set("io", io);
 
+// BARU PASANG PENGUATAN KEAMANAN HEADER HTTP
+app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
+
 // Supaya Express bisa baca body request berformat JSON
 app.use(express.json());
 // Setup session login (siapa yang sedang login, disimpan di cookie)
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "magetan-go-digital-loket",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, maxAge: 8 * 60 * 60 * 1000 }
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 8 * 60 * 60 * 1000
+    }
   })
 );
 

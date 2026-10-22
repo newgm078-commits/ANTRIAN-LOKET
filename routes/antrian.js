@@ -175,12 +175,34 @@ router.get("/arsip/bulan", requireAuth, (req, res) => {
   res.json({ month, rows });
 });
 
+// Pengaman pengambilan tiket
+const lastTicketTimeMap = new Map();
+const COOLDOWN_TIKET_MS = 2500; // Jeda 2.5 detik
+
 // POST /ambil - Ambil nomor: buat tiket antrian baru sesuai jalur layanan (prioritas opsional)
 router.post("/ambil", requireAuth, requireRole("queue_taker", "admin"), (req, res) => {
   if (!takingEnabled()) {
     return res.status(423).json({ error: "Pengambilan nomor sedang dihentikan" });
   }
 
+  const clientKey = req.session.user?.id || req.ip || "kios";
+  const now = Date.now();
+  const lastTime = lastTicketTimeMap.get(clientKey) || 0;
+  if (now - lastTime < COOLDOWN_TIKET_MS) {
+    const sisaDetik = ((COOLDOWN_TIKET_MS - (now - lastTime)) / 1000).toFixed(1);
+    return res.status(429).json({
+      error: `Harap tunggu ${sisaDetik} detik sebelum mengambil nomor antrian berikutnya.`
+    });
+  }
+  // Catat waktu pengambilan terakhir
+  lastTicketTimeMap.set(clientKey, now);
+  // Bersihkan riwayat lama di memori jika sudah menumpuk
+  if (lastTicketTimeMap.size > 500) {
+    for (const [key, time] of lastTicketTimeMap.entries()) {
+      if (now - time > 60000) lastTicketTimeMap.delete(key);
+    }
+  }
+  
   const prefix = String(req.body.prefix || "").toUpperCase();
   const isPriority = Boolean(req.body.priority);
   const prefixes = getPrefixes()
