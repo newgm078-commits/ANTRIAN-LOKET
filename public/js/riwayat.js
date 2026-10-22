@@ -29,6 +29,10 @@ function bacaLoketAdmin() {
   try { return Number(localStorage.getItem("adminLoketNumber")) || 0; } catch (e) { return 0; }
 }
 
+// Simpan loket pilihan admin
+let halamanArsip = 1;
+const batasArsip = 50;
+
 // Ubah indikator koneksi di header: hijau "Connected" kalau terhubung ke server, merah "Terputus" kalau putus
 function setKoneksi(terhubung) {
   document.getElementById("koneksi-dot").className = `w-2 h-2 rounded-full ${terhubung ? "bg-tertiary-fixed" : "bg-error"}`;
@@ -77,6 +81,31 @@ async function muatRiwayat() {
   }
 }
 
+// Muat arsip tiket lama
+async function muatArsip() {
+  const data = await api(`/api/admin/archive?page=${halamanArsip}&limit=${batasArsip}`);
+  document.getElementById("arsip-ringkas").textContent =
+    `${data.total} tiket diarsipkan · menampilkan ${data.rows.length} tiket terbaru`;
+  const jumlahHalaman = Math.max(1, Math.ceil(data.total / data.limit));
+  document.getElementById("arsip-halaman").textContent =
+    `Halaman ${data.page} dari ${jumlahHalaman}`;
+  document.getElementById("arsip-sebelum").disabled = data.page <= 1;
+  document.getElementById("arsip-sesudah").disabled = data.page >= jumlahHalaman;
+  document.getElementById("arsip-body").innerHTML =
+    data.rows
+      .map(
+        (row) => `<tr class="hover:bg-surface-container-low">
+          <td class="py-4 px-6">${formatTanggalLengkap(row.day)}</td>
+          <td class="py-4 px-6 font-bold">${row.code}</td>
+          <td class="py-4 px-6">${statusChip(row.status)}${row.isPriority ? ' <span class="chip chip-priority">P</span>' : ""}</td>
+          <td class="py-4 px-6">${row.loketNumber || "-"}</td>
+          <td class="py-4 px-6 font-tech text-xs">${formatTime(row.archivedAt)}</td>
+        </tr>`
+      )
+      .join("") ||
+    `<tr><td class="py-8 px-6 text-on-surface-variant" colspan="5">Belum ada tiket yang diarsipkan.</td></tr>`;
+}
+
 // Titik mulai halaman: cek login, isi nama & logo instansi, pasang tombol, lalu muat riwayat
 (async () => {
   const user = await requireUser(["admin", "loket"]);
@@ -86,6 +115,37 @@ async function muatRiwayat() {
   // Badge loket: sama seperti di halaman Kontrol Loket (admin dianggap Loket 1)
   if (user.role === "admin") { if (!user.loketNumber) user.loketNumber = bacaLoketAdmin() || 1; document.getElementById("nav-admin-dashboard")?.classList.remove("hidden"); }
   document.getElementById("loket-badge").textContent = `LOKET ${user.loketNumber}`;
+  if (user.role === "admin") {
+    document.getElementById("arsip-section").classList.remove("hidden");
+    document.getElementById("arsipkan-tiket").addEventListener("click", async () => {
+      if (!window.confirm("Arsipkan semua tiket yang lebih lama dari satu tahun? Tiket akan dipindahkan dari data aktif, tetapi tetap tersimpan di arsip.")) return;
+      try {
+        const result = await api("/api/admin/archive/expired", { method: "POST" });
+        halamanArsip = 1;
+        toast(`${result.archived} tiket berhasil diarsipkan.`);
+        await muatArsip();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+    document.getElementById("arsip-sebelum").addEventListener("click", async () => {
+      halamanArsip = Math.max(1, halamanArsip - 1);
+      try {
+        await muatArsip();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+    document.getElementById("arsip-sesudah").addEventListener("click", async () => {
+      halamanArsip += 1;
+      try {
+        await muatArsip();
+      } catch (err) {
+        halamanArsip = Math.max(1, halamanArsip - 1);
+        toast(err.message);
+      }
+    });
+  }
 
   // Indikator koneksi: tampil "Connected" seperti di Kontrol Loket, baru berubah merah kalau koneksi benar-benar putus
   const socket = connectSocket(() => {});
@@ -127,5 +187,13 @@ async function muatRiwayat() {
   });
   document.getElementById("riwayat-reload").addEventListener("click", muatRiwayat);
 
+  // Tombol logout: hapus session di server, lalu kembali ke halaman login
   muatRiwayat();
+  if (user.role === "admin") {
+    try {
+      await muatArsip();
+    } catch (err) {
+      document.getElementById("arsip-ringkas").textContent = err.message;
+    }
+  }
 })();

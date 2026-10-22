@@ -52,8 +52,26 @@ db.exec(`
     day_key TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS tickets_archive (
+    ticket_id INTEGER PRIMARY KEY,
+    prefix TEXT NOT NULL,
+    number INTEGER NOT NULL,
+    code TEXT NOT NULL,
+    is_priority INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL CHECK (status IN ('waiting', 'called', 'serving', 'done', 'skipped')),
+    loket_number INTEGER,
+    created_at TEXT NOT NULL,
+    called_at TEXT,
+    started_at TEXT,
+    finished_at TEXT,
+    day_key TEXT NOT NULL,
+    archived_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_tickets_day_key ON tickets (day_key);
   CREATE INDEX IF NOT EXISTS idx_tickets_day_status ON tickets (day_key, status);
   CREATE INDEX IF NOT EXISTS idx_tickets_prefix ON tickets (day_key, prefix, number);
+  CREATE INDEX IF NOT EXISTS idx_tickets_archive_day_key ON tickets_archive (day_key);
 `);
 
 function todayKey() {
@@ -66,6 +84,20 @@ function todayKey() {
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function oneYearAgoKey() {
+  const cutoff = new Date();
+  const day = cutoff.getDate();
+  cutoff.setDate(1);
+  cutoff.setFullYear(cutoff.getFullYear() - 1);
+  const lastDayOfMonth = new Date(cutoff.getFullYear(), cutoff.getMonth() + 1, 0).getDate();
+  cutoff.setDate(Math.min(day, lastDayOfMonth));
+
+  const y = cutoff.getFullYear();
+  const m = String(cutoff.getMonth() + 1).padStart(2, "0");
+  const d = String(cutoff.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function seed() {
@@ -147,6 +179,7 @@ module.exports = {
   db,
   todayKey,
   nowIso,
+  oneYearAgoKey,
   getSetting,
   setSetting,
   getSettings,

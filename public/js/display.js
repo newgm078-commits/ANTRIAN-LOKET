@@ -16,6 +16,19 @@ function renderKalender() {
   });
 }
 
+// Jalankan jam digital di header: update setiap detik
+function scheduleDailyRefresh() {
+  const now = new Date();
+  const nextRefresh = new Date(now);
+  nextRefresh.setHours(0, 5, 0, 0);
+
+  if (nextRefresh <= now) {
+    nextRefresh.setDate(nextRefresh.getDate() + 1);
+  }
+
+  window.setTimeout(() => window.location.reload(), nextRefresh - now);
+}
+
 // Atur jumlah kolom & tinggi baris daftar loket supaya semuanya muat tanpa scroll
 function ukurDaftarLoket(jumlah) {
   const kolom = jumlah <= 6 ? 1 : jumlah <= 16 ? 2 : 3;
@@ -123,6 +136,7 @@ window.addEventListener("resize", () => {
   startClock("live-clock");
   renderKalender();
   setInterval(renderKalender, 60000);
+  scheduleDailyRefresh();
   render(await api("/api/antrian/state"));
   connectSocket(render, { page: "display" });
 })();

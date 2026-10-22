@@ -3,6 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const session = require("express-session");
+const Database = require("better-sqlite3");
+const SqliteStore = require("better-sqlite3-session-store")(session);
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -26,6 +28,7 @@ const authRoutes = require("./routes/auth");
 const antrianRoutes = require("./routes/antrian");
 const loketRoutes = require("./routes/loket");
 const adminRoutes = require("./routes/admin");
+const { db, todayKey, nowIso } = require("./utils/db");
 
 // Buat aplikasi Express & bungkus dengan server HTTP biasa (supaya bisa dipasangi Socket.io)
 const app = express();
@@ -58,11 +61,52 @@ const io = new Server(server);
 // Simpan "io" supaya bisa diakses dari file route lain lewat req.app.get("io")
 app.set("io", io);
 
+// Gagal menyambung ke Sosket.io 
+function finishPreviousDayTickets() {
+  try {
+    const result = db
+      .prepare(
+        `UPDATE tickets
+         SET status = 'skipped', finished_at = ?
+         WHERE day_key < ? AND status IN ('waiting', 'called', 'serving')`
+      )
+      .run(nowIso(), todayKey());
+
+    if (result.changes > 0) {
+      console.log(`Midnight cleanup: ${result.changes} tiket ditandai skipped.`);
+      io.emit("queue:update", antrianRoutes.getQueueBundle());
+    }
+  } catch (error) {
+    console.error("Midnight cleanup gagal memperbarui tiket:", error);
+  }
+}
+
+// Jadwalkan pembersihan tiket setiap tengah malam: tertinggal ditandai "skipped"
+function scheduleMidnightCleanup() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+
+  setTimeout(() => {
+    finishPreviousDayTickets();
+    scheduleMidnightCleanup();
+  }, midnight.getTime() - now.getTime());
+}
+
+// Bersihkan tiket tertinggal saat startup, lalu jalankan kembali setiap tengah malam.
+finishPreviousDayTickets();
+scheduleMidnightCleanup();
+
 // Supaya Express bisa baca body request berformat JSON
 app.use(express.json());
 // Setup session login (siapa yang sedang login, disimpan di cookie)
+const sessionDbDir = path.join(__dirname, "database");
+fs.mkdirSync(sessionDbDir, { recursive: true });
+const sessionDb = new Database(path.join(sessionDbDir, "sessions.db"));
+
 app.use(
   session({
+    store: new SqliteStore({ client: sessionDb }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,

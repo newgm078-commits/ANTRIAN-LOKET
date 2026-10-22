@@ -3,6 +3,19 @@ let user = null;
 let page = 1;
 let state = { stats: {}, serving: [] };
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    };
+    return entities[character];
+  });
+}
+
 // Tampilkan section sesuai hash URL, sembunyikan yang lain (History & Riwayat memakai satu halaman arsip)
 function showView() {
   const hash = (location.hash || "#dashboard").replace("#", "");
@@ -269,7 +282,7 @@ async function loadSettings() {
     .map(
       (l) => `<div class="flex gap-2">
         <span class="w-20 py-2">Loket ${l.number}</span>
-        <input data-loket="${l.number}" value="${l.name}" class="flex-1 rounded-lg bg-[#edf2f7] border px-3 py-2" />
+        <input data-loket="${l.number}" value="${escapeHtml(l.name)}" class="flex-1 rounded-lg bg-[#edf2f7] border px-3 py-2" />
         <button data-save-loket="${l.number}" class="px-3 rounded-lg bg-primary text-white text-sm">Simpan</button>
         <button data-delete-loket="${l.number}" class="px-3 rounded-lg border border-error text-error text-sm">Hapus</button>
       </div>`

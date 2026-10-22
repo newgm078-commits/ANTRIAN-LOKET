@@ -7,7 +7,7 @@ const fs = require("fs");
 // Import: multer untuk upload file
 const multer = require("multer");
 // Import: database + helper pengaturan & tanggal hari ini
-const { db, getSettings, setSetting, todayKey } = require("../utils/db");
+const { db, getSettings, setSetting, todayKey, nowIso, oneYearAgoKey } = require("../utils/db");
 // Import: middleware login & pengecekan role
 const { requireAuth, requireRole } = require("../utils/auth");
 // Import: modul antrian (untuk getQueueBundle)
@@ -19,6 +19,10 @@ const router = express.Router();
 // uploadDir: folder tujuan penyimpanan logo; dibuat otomatis kalau belum ada
 const uploadDir = path.join(__dirname, "..", "public", "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+// Batasan format file
+const ALLOWED_EXT = [".png", ".jpg", ".jpeg", ".webp"];
+const ALLOWED_MIME = ["image/png", "image/jpeg", "image/webp"];
 
 // Konfigurasi upload multer: simpan ke disk, batas 2MB, whitelist ekstensi ketat
 const upload = multer({
@@ -45,6 +49,28 @@ const upload = multer({
   }
 });
 
+// Hapus file logo lama jika ada (kecuali file baru diunggah)
+function removePreviousLogo(oldLogo, newFilename) {
+  const prefix = "/uploads/";
+  if (!oldLogo || !oldLogo.startsWith(prefix)) return;
+
+  const filename = oldLogo.slice(prefix.length);
+  if (
+    filename === newFilename ||
+    path.basename(filename) !== filename ||
+    !/^logo-[\w-]+\.(png|jpe?g|webp)$/i.test(filename)
+  ) {
+    return;
+  }
+
+  const oldPath = path.join(uploadDir, filename);
+  try {
+    fs.unlinkSync(oldPath);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+}
+
 // POST /logo - Upload logo baru dengan penanganan error JSON & pembersihan file lama
 router.post("/logo", requireAuth, requireRole("admin"), (req, res) => {
   upload.single("logo")(req, res, (err) => {
@@ -62,16 +88,30 @@ router.post("/logo", requireAuth, requireRole("admin"), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "File logo wajib dipilih" });
     }
-    // PENGHAPUSAN FILE LAMA: Hapus logo lama agar tidak menumpuk di disk
+
     const oldLogo = getSetting("logo");
-    if (oldLogo && oldLogo.startsWith("/uploads/")) {
-      const oldPath = path.join(__dirname, "..", "public", oldLogo);
-      if (fs.existsSync(oldPath)) {
-        try { fs.unlinkSync(oldPath); } catch (e) {}
-      }
-    }
     const url = `/uploads/${req.file.filename}`;
-    setSetting("logo", url);
+    try {
+      setSetting("logo", url);
+    } catch (error) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (cleanupError) {
+        if (cleanupError.code !== "ENOENT") {
+          console.error("Gagal membersihkan file logo baru setelah penyimpanan setting gagal:", cleanupError);
+        }
+      }
+      console.error("Gagal menyimpan setting logo baru:", error);
+      return res.status(500).json({ error: "Gagal menyimpan setting logo baru" });
+    }
+
+    try {
+      removePreviousLogo(oldLogo, req.file.filename);
+    } catch (error) {
+      console.error("Logo baru tersimpan, tetapi file logo lama gagal dihapus:", error);
+      return res.status(500).json({ error: "Logo baru tersimpan, tetapi file logo lama gagal dihapus" });
+    }
+
     req.app.get("io").emit("queue:update", antrian.getQueueBundle());
     res.json({ ok: true, url });
   });
@@ -112,18 +152,77 @@ router.post("/reset", requireAuth, requireRole("admin"), (req, res) => {
   res.json({ ok: true, day });
 });
 
+// POST /archive/expired
+const archiveExpiredTickets = db.transaction((cutoff, archivedAt) => {
+  const copied = db
+    .prepare(
+      `INSERT OR IGNORE INTO tickets_archive (
+         ticket_id, prefix, number, code, is_priority, status, loket_number,
+         created_at, called_at, started_at, finished_at, day_key, archived_at
+       )
+       SELECT id, prefix, number, code, is_priority, status, loket_number,
+              created_at, called_at, started_at, finished_at, day_key, ?
+       FROM tickets
+       WHERE day_key < ?`
+    )
+    .run(archivedAt, cutoff);
+
+  const removed = db
+    .prepare(
+      `DELETE FROM tickets
+       WHERE day_key < ?
+         AND id IN (SELECT ticket_id FROM tickets_archive)`
+    )
+    .run(cutoff);
+
+  return { archived: removed.changes, newlyArchived: copied.changes };
+});
+
+// GET /archive - Daftar tiket arsip lama (hanya admin)
+router.get("/archive", requireAuth, requireRole("admin"), (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(10, Number(req.query.limit) || 50));
+  const offset = (page - 1) * limit;
+  const total = db.prepare("SELECT COUNT(*) AS n FROM tickets_archive").get().n;
+  const rows = db
+    .prepare(
+      `SELECT ticket_id AS id, prefix, number, code, is_priority, status,
+              loket_number, created_at, called_at, started_at, finished_at,
+              day_key, archived_at
+       FROM tickets_archive
+       ORDER BY day_key DESC, ticket_id DESC
+       LIMIT ? OFFSET ?`
+    )
+    .all(limit, offset)
+    .map((row) => ({
+      id: row.id,
+      prefix: row.prefix,
+      number: row.number,
+      code: row.code,
+      isPriority: Boolean(row.is_priority),
+      status: row.status,
+      loketNumber: row.loket_number,
+      createdAt: row.created_at,
+      calledAt: row.called_at,
+      startedAt: row.started_at,
+      finishedAt: row.finished_at,
+      day: row.day_key,
+      archivedAt: row.archived_at
+    }));
+
+  res.json({ total, page, limit, rows });
+});
+
+// POST /archive/expired - Pindahkan tiket berumur lebih dari satu tahun ke arsip (hanya admin)
+router.post("/archive/expired", requireAuth, requireRole("admin"), (req, res) => {
+  const cutoff = oneYearAgoKey();
+  const result = archiveExpiredTickets(cutoff, nowIso());
+  res.json({ ok: true, cutoff, ...result });
+});
+
 // GET /stats - Statistik: jumlah antrian hari ini per status
 router.get("/stats", requireAuth, (req, res) => {
   res.json(antrian.getQueueBundle().stats);
-});
-
-// POST /logo - Upload logo: simpan file logo dan catat URL-nya di setting
-router.post("/logo", requireAuth, requireRole("admin"), upload.single("logo"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "File logo wajib diunggah" });
-  const url = `/uploads/${req.file.filename}`;
-  setSetting("logo", url);
-  req.app.get("io").emit("queue:update", antrian.getQueueBundle());
-  res.json({ ok: true, url });
 });
 
 // Export: router dipakai di server utama
