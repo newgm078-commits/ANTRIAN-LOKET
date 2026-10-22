@@ -27,6 +27,9 @@ const antrianRoutes = require("./routes/antrian");
 const loketRoutes = require("./routes/loket");
 const adminRoutes = require("./routes/admin");
 
+// Buat aplikasi Express & bungkus dengan server HTTP biasa (supaya bisa dipasangi Socket.io)
+const app = express();
+
 // =========================================================================
 // PENGUATAN KEAMANAN HEADER HTTP (SECURITY HEADERS)
 // =========================================================================
@@ -48,22 +51,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Buat aplikasi Express & bungkus dengan server HTTP biasa (supaya bisa dipasangi Socket.io)
-const app = express();
+// Buat server HTTP dan pasang Socket.io ke server yang sama
 const server = http.createServer(app);
 // Pasang Socket.io ke server yang sama, supaya bisa kirim update real-time ke browser
 const io = new Server(server);
 // Simpan "io" supaya bisa diakses dari file route lain lewat req.app.get("io")
 app.set("io", io);
-
-// BARU PASANG PENGUATAN KEAMANAN HEADER HTTP
-app.disable("x-powered-by");
-app.use((req, res, next) => {
-  res.setHeader("X-Frame-Options", "DENY");
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  next();
-});
 
 // Supaya Express bisa baca body request berformat JSON
 app.use(express.json());
